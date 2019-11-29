@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link href="https://fonts.googleapis.com/css?family=Alatsi|Frijole&display=swap" rel="stylesheet">
+    <title>Space Invaders</title>
+
+    <style>
+        .container {
+            position: absolute;
+            width: 500px;
+            height: 600px;
+            margin-left: 0px;
+            background-image: url('./img/landscape3.jpg');
+            background-size: cover;
+            background-color: black;
+            overflow: hidden;
+            
+        }
+
+        .startButton {
+            text-align: center;
+            font-size: 2em;
+            color: white;
+            background-color: red;
+            font-family: tahoma;
+
+        }
+
+        .myShip {
+            position: absolute;
+            left: 45%;
+            bottom: 6%;
+            background-image: url('./img/tank2.png');
+            border-radius: 0;
+            width: 110px;
+            height: 85px;
+        }
+
+        .fireme {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 8px;
+            height: 40px;
+            border-radius: 30%;
+            background-color: red;
+
+        }
+
+        .hide {
+            display: none;
+        }
+
+        .alien {
+            position: absolute;
+            display: inline-block;
+            top: 0px;
+            left: 75px;
+            width: 75px;
+            height: 75px;
+            padding: 2px;
+            background-image: url('./img/alien3.png');
+            background-repeat: no-repeat;
+        }
+        .alien2 {
+            position: absolute;
+            display: inline-block;
+            top: 0px;
+            left: 75px;
+            width: 75px;
+            height: 100px;
+            padding: 2px;
+            background-image: url('./img/jake5.png');
+            background-repeat: no-repeat;
+            
+
+        }
+
+        .title {
+            height: 50px;
+            line-height: 50px;
+            font-size: 40px;
+            width: 500px;
+            background-color: black;
+            color: green;
+            text-align: center;
+            font-family: 'Frijole', cursive;
+
+        }
+        .topBar {
+            height: 40px;
+            line-height: 30px;
+            width: 500px;
+            margin-left: 0px;
+            font-family: 'Alatsi', sans-serif;
+            font-size: 21px;
+            background-color: black;
+            color: white;
+            text-align: center;
+            
+
+        }
+
+        #image {
+            height: 200px;
+            width: 150px;
+            margin-left: 175px;
+            background: url('./img/Sprite_Jake3.png') 0px 0px;
+}
+    .btn {
+        font-family: tahoma;
+        font-size: 40px;
+        cursor: pointer;
+    }
+
+    </style>
+</head>
+
+<body>
+    <div class = "start">
+           <!-- <p id="image" onmouseover="animateScript()"> </p> -->
+        <div class = "title">
+            JakE InvaderZ
+        </div>    
+            
+
+        <div class="topBar">
+               
+            Score: <span class="score"> 0</span>
+            <span class="message"></span>
+        </div>
+
+        <div class="container">
+
+                             
+                <div class="startButton">Click to Start Game</div>
+
+                <p id="image" onmouseover="animateScript()"> </p>
+
+            <div class="myShip"></div>
+            <div class="fireme hide"></div>
+        </div>
+
+    </div>
+
+    <script>
+        const btn_start = document.querySelector            (".startButton");
+        const myShip = document.querySelector               (".myShip");
+        const container = document.querySelector            (".container");
+        const fireme = document.querySelector               (".fireme");
+        const scoreOutput = document.querySelector          (".score");
+        const containerDim =                                container.getBoundingClientRect();
+        const message = document.querySelector              (".message");
+        const splash = document.getElementById("image");
+
+        btn_start.addEventListener("click", startGame);
+        let player = {
+            score: 0,
+            speed: 5,
+            gameOver: true,
+            fire: false,
+            alienSpeed: 1
+        };
+
+        let keyV = {};
+
+        document.addEventListener("keydown", function (e) {
+            let key = e.keyCode;
+
+            if (key === 37) {
+                keyV.left = true;
+            } else if (key === 39) {
+                keyV.right = true;
+            } else if (key === 38 || key === 32) {
+                if (!player.fire) {
+                    addShoot();
+                }
+            }
+
+
+        })
+
+        document.addEventListener("keyup", function (e) {
+            let key = e.keyCode;
+            if (key === 37) {
+                keyV.left = false;
+            } else if (key === 39) {
+                keyV.right = false;
+            }
+        })
+
+        // **** STARTGAME **** //
+
+        function startGame() {
+
+            if (player.gameOver) {
+                clearAliens();
+                player.gameOver = false;
+                player.fire = false;
+                btn_start.style.display = "none";
+                player.alienSpeed = 2;
+                player.score = 0;
+                scoreOutput.textContent = player.score;
+                setupAliens(16);
+
+                player.animFrame = requestAnimationFrame(update)
+            }
+        }
+
+        /// **** GAME OVER **** ///
+
+        function gameOver() {
+            btn_start.style.display = "block";
+            btn_start.innerHTML = "Restart New Game";
+            player.fire = true;
+            fireme.classList.add("hide");
+
+
+        }
+
+        /// *** CLEAR ALIENS ON RESTART *** ///
+
+        function clearAliens() {
+            let tempAliens = document.querySelectorAll(".alien2");
+            for (let x = 0; x < tempAliens.length; x++) {
+                tempAliens[x].parentNode.removeChild(tempAliens[x]);
+
+            }
+            messageOutput("");
+        }
+
+            function setupAliens(num) {
+                let tempWidth = 75;
+
+                let lastCol = 500; //containerDim.width;
+                // **CC** was 20, - tempWidth;
+
+                let row = {
+                    x: containerDim.left,
+                    y: 10 // chg from 50 alien top spacing 
+                }
+
+
+                for (let x = 0; x < num; x++) {
+                    row.x += tempWidth - 60; /*CC from +10 changes horizontal spacing*/
+                    if (row.x > (lastCol - tempWidth)) {
+                        row.y += 40; // alien spacing vertical
+                        row.x = containerDim.left; 
+                    }
+                    alienMaker(row, tempWidth);
+                    row.x += tempWidth;
+                }
+
+            }
+
+            function alienMaker(row, tempWidth) {
+                console.log(row);
+                let div = document.createElement("div");
+                div.classList.add("alien2"); /*cc*/ 
+                div.style.width = tempWidth + "px";
+                div.xpos = Math.floor(row.x);
+                div.ypos = Math.floor(row.y);
+                div.style.left = div.xpos + "px";
+                div.style.top = div.ypos + "px";
+                div.directionMove = 1;
+                container.appendChild(div);
+
+            }
+
+            function addShoot() {
+                player.fire = true;
+                fireme.classList.remove("hide");
+                fireme.xpos = (myShip.offsetLeft + (myShip.offsetWidth / 2));
+                fireme.ypos = myShip.offsetTop - 10;
+                fireme.style.left = fireme.xpos + "px";
+                fireme.style.top = fireme.ypos + "px";
+            }
+
+            function isCollide(a, b) {
+                let aRect = a.getBoundingClientRect();
+                let bRect = b.getBoundingClientRect();
+                return !(
+                    (aRect.bottom < bRect.top) ||
+                    (aRect.top > bRect.bottom) ||
+                    (aRect.right < bRect.left) ||
+                    (aRect.left > bRect.right)
+                )
+
+            }
+
+            function messageOutput(mes) {
+                message.innerHTML = mes;
+
+
+            }
+
+            function update() {
+                if (!player.gameOver) {
+
+
+                     let tempAliens = document.querySelectorAll(".alien2");  /*cc*/
+
+                    if (tempAliens.length == 0) {
+                        player.gameOver = true;
+                        messageOutput("You Won Newb!");
+                        gameOver();
+
+                    }
+
+                    for (let x = tempAliens.length - 1; x > -1; x--) {
+                        let el = tempAliens[x];
+                        if (isCollide(el, fireme)) {
+
+                            player.alienSpeed++;
+                            player.score++;
+                            scoreOutput.textContent = player.score;
+                            player.fire = false;
+                            fireme.classList.add("hide");
+                            el.parentNode.removeChild(el);
+                            fireme.ypos = containerDim.height + 100;
+
+
+
+                        }
+                        if (el.xpos > (containerDim.width - el.offsetWidth) || el.xpos < containerDim.left - el
+                            .offsetWidth + 60) { //chg worked*** (left boundary adjustment)
+                            el.directionMove *= -1;
+                            el.ypos += 30;
+
+                            if (el.ypos > myShip.offsetTop - 20) {
+                                messageOutput("!GAME OVER NEWB!");
+                                player.gameOver = true;
+                                gameOver();
+                            }
+
+
+                        }
+                        el.xpos += (player.alienSpeed * el.directionMove);
+
+                        el.style.left = el.xpos + "px";
+                        el.style.top = el.ypos + "px";
+
+                    }
+
+                    let tempPos = myShip.offsetLeft;
+
+                    if (player.fire) {
+                        if (fireme.ypos > 0) {
+                            fireme.ypos -= 15;
+                            fireme.style.top = fireme.ypos + "px";
+                        } else {
+                            player.fire = false;
+                            fireme.classList.add("hide");
+                            fireme.ypos = containerDim.height + 100;
+                        }
+                    }
+
+                    if (keyV.left && tempPos > containerDim.left) {
+                        tempPos -= player.speed;
+                    }
+                    if (keyV.right && (tempPos + myShip.offsetWidth) < containerDim.right) {
+                        tempPos += player.speed;
+                    }
+
+                    myShip.style.left = tempPos + "px";
+                    player.animFrame = requestAnimationFrame(update);
+                }
+            }
+
+// animation start 
+
+    var tID;
+
+    function animateScript() {
+    
+    var position = 150;
+    const interval = 80;
+
+    tID = setInterval ( () => {
+    document.getElementById("image").style.backgroundPosition = `-${position}px 0px`;
+
+    if (position < 1500) 
+    { position = position + 150;} // increment 150px to next picture in spritesheet
+        else
+        { position = 150;} // reset position to 150 once 1500 exceeded
+
+}, interval );
+
+}    
+
+
+    </script>
+</body>
+
+</html>
