@@ -9,6 +9,13 @@
     <title>Space Invaders</title>
 
     <style>
+	.body {
+	height: 100%;
+	overflow: hidden;
+	}	
+
+
+
         .container {
             position: absolute;
             width: 500px;
@@ -116,6 +123,8 @@
         font-size: 40px;
         cursor: pointer;
     }
+
+    
 
     </style>
 </head>
@@ -362,7 +371,7 @@
                     if (keyV.left && tempPos > containerDim.left) {
                         tempPos -= player.speed;
                     }
-                    if (keyV.right && (tempPos + myShip.offsetWidth) < containerDim.right) {
+                    if (keyV.right && (tempPos + myShip.offsetWidth) < containerDim.right - 10) {    // added -10
                         tempPos += player.speed;
                     }
 
